@@ -20,3 +20,11 @@ class Interaction:
             return "Россия"
         else:
             return area
+
+    def print_info_after_database_is_formed(self):
+        print("\nЯ сформировал базу данных вакансий заданных компаний\n")
+        print("Вот список действий, которые Вы можете произвести:")
+
+    def working_with_the_database(self):
+        """возможные действия"""
+        pass

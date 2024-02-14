@@ -42,7 +42,7 @@ class HeadHunterAPI(Api):
             # Ищем id региона по его названию
             for region in data:
                 if region["name"].title().strip() == area_name.title().strip():
-                    print(region["id"])
+                    # print(region["id"])
                     return region["id"]
                 else:
                     continue
@@ -50,7 +50,7 @@ class HeadHunterAPI(Api):
             for region in data:
                 for region_areas in region["areas"]:
                     if region_areas["name"].title().strip() == area_name.title().strip():
-                        print(region_areas["id"])
+                        # print(region_areas["id"])
                         return region_areas["id"]
                     else:
                         continue
@@ -59,7 +59,7 @@ class HeadHunterAPI(Api):
                 for region_areas in region["areas"]:
                     for city in region_areas["areas"]:
                         if city["name"].title().strip() == area_name.title().strip():
-                            print(city["id"])
+                            # print(city["id"])
                             return city["id"]
                         else:
                             continue
