@@ -78,11 +78,8 @@ class HeadHunterAPI(Api):
             params = {"employer_id": employer_id, "area": area_id, "page": 0, "per_page": per_page}
 
             request = requests.get(url, params=params)
-            print(request.json()["items"])
+            #print(request.json()["items"])
+            return request.json()["items"]
         else:
             # Если id региона не найден, возвращаем пустой список
             return []
-
-
-qwe = HeadHunterAPI()
-qwe.get_request(49357, "уфа  ", per_page=5)
