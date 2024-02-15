@@ -1,9 +1,13 @@
+# ------------------------------- Файл, содержащий методы управления Базой Данных --------------------------------------
+
 import psycopg2
 
 
 class DBUtils:
     def create_db(self, database_name, params):
-        """создание БД"""
+        """
+        Создание базы данных
+        """
 
         connection = self.connection(params)  # psycopg2.connect(dbname="postgres", **params)
         cur = connection.cursor()
@@ -12,7 +16,9 @@ class DBUtils:
         self.connection_close(connection)
 
     def create_tabs(self, params):
-        """создание таблиц"""
+        """
+        Создание таблиц
+        """
 
         connection = self.connection(params,
                                      database_name="hh")  # вызываем метод соединения с указанием имени базы данных
@@ -40,23 +46,30 @@ class DBUtils:
                 )
             """)
 
-        self.connection_close(connection)  # вызываем метод закрытия соединения
+        self.connection_close(connection)
 
     def connection(self, params, database_name="postgres"):
-        """метод соединения (см. картинку)"""
+        """
+        Подключение программы к базе данных
+        """
 
         connect = psycopg2.connect(dbname=database_name, **params)  # создаем соединение с базой данных
         connect.autocommit = True  # включаем режим автоматической фиксации
         return connect  # возвращаем соединение
 
     def connection_close(self, connection):
-        """метод закрытия соединения (см. картинку)"""
+        """
+        Прекращение подключения программы к базе данных
+        """
+
         connection.commit()
         connection.close()
 
     def record(self, data, params):
-        """add_data_to_tabs
-        заполнить данными таблицу"""
+        """
+        add_data_to_tabs
+        Заполнение таблицы данными
+        """
 
         connection = self.connection(params, database_name="hh")
         with connection.cursor() as cur:
@@ -97,40 +110,150 @@ insert into vacancy values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
         self.connection_close(connection)
 
 
-class DBManager:
-    # Создайте класс DBManager, который будет подключаться к БД PostgreSQL и иметь следующие методы:
-    def get_companies_and_vacancies_count(self):
-        """
-        получает список всех компаний и количество вакансий у каждой компании.
-        """
-        pass
+class DBManager(DBUtils):
+    def __init__(self, prog):
+        self.prog = prog
 
-    def get_all_vacancies(self):
+    def get_companies_and_vacancies_count(self, params):
         """
-        получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на вакансию.
+        Получить список всех компаний и количество вакансий у каждой из них
         """
-        pass
 
-    def get_avg_salary(self):
-        """
-        получает среднюю зарплату по вакансиям.
-        """
-        pass
+        connection = self.connection(params, database_name="hh")
+        print("Список всех компаний и количество вакансий у каждой из них:")
+        with connection.cursor() as cur:
+            cur.execute("""
+            SELECT employer_name, COUNT(vacancy_id) AS vacancies_count
+            FROM vacancy
+            GROUP BY employer_name
+            ORDER BY vacancies_count DESC
+            """)
 
-    def get_vacancies_with_higher_salary(self):
+            results = cur.fetchall()
+            for i in results:
+                print(f"{i[0]} - {i[1]}")
+
+        self.connection_close(connection)
+        self.prog.printhelper.to_return()
+
+    def get_all_vacancies(self, params):
+        """
+        Получить список всех вакансий с указанием: названия компании, названия вакансии, зарплаты и ссылки на вакансию
+        """
+
+        connection = self.connection(params, database_name="hh")
+        print("Список всех вакансий:")
+        with connection.cursor() as cur:
+            cur.execute("""
+            SELECT employer_name, vacancy_name, salary_from, salary_to, url
+            FROM vacancy
+            ORDER BY employer_name, vacancy_name
+            """)
+
+            results = cur.fetchall()
+            for i in results:
+                if i[2] and i[3]:
+                    salary = f"{i[2]}-{i[3]}"
+                elif i[2]:
+                    salary = f"от {i[2]}"
+                elif i[3]:
+                    salary = f"до {i[3]}"
+                else:
+                    salary = "Не указана"
+                print(f"{i[0]} - {i[1]} - {salary} - {i[4]}")
+
+        self.connection_close(connection)
+        self.prog.printhelper.to_return()
+
+    def get_avg_salary(self, params, independence=True):
+        """
+        Получить среднюю зарплату по вакансиям
+        """
+
+        connection = self.connection(params, database_name="hh")
+        with connection.cursor() as cur:
+            cur.execute("""
+            SELECT AVG(COALESCE(salary_from, (salary_from + salary_to) / 2, salary_to, COALESCE(salary_to, 
+            (salary_from + salary_to) / 2, salary_from))) AS avg_salary
+            FROM vacancy
+        """)
+
+            result = round(cur.fetchone()[0], 2)
+            if independence:
+                print(f"Средняя зарплата по вакансиям - {result}")
+            else:
+                return result
+
+        self.connection_close(connection)
+        if independence:
+            self.prog.printhelper.to_return()
+
+    def get_vacancies_with_higher_salary(self, params):
         """"
-        получает список всех вакансий, у которых зарплата выше средней по всем вакансиям.
+        Получить список всех вакансий, у которых зарплата выше средней по всем вакансиям
         """
-        pass
 
-    def get_vacancies_with_keyword(self):
-        """
-        получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python.
-        """
-        pass
+        connection = self.connection(params, database_name="hh")
+        with connection.cursor() as cur:
+            avg_salary = self.get_avg_salary(params, independence=False)
+            cur.execute("""
+                        SELECT employer_name, vacancy_name, salary_from, salary_to, url
+                        FROM vacancy
+                        WHERE COALESCE(salary_from, (salary_from + salary_to) / 2, salary_to, COALESCE(salary_to, 
+                        (salary_from + salary_to) / 2, salary_from)) > %s
+                        ORDER BY employer_name, vacancy_name
+                        """, (avg_salary,))
 
-    def inserting_data(self):
+            results = cur.fetchall()
+            for i in results:
+                if i[2] and i[3]:
+                    salary = f" {i[2]}-{i[3]}"
+                elif i[2]:
+                    salary = f"от {i[2]}"
+                elif i[3]:
+                    salary = f"до {i[3]}"
+                else:
+                    salary = "Не указана"
+                print(f"{i[0]} - {i[1]} - зарплата: {salary} - {i[4]}")
+
+        self.connection_close(connection)
+        self.prog.printhelper.to_return()
+
+    def get_vacancies_with_keyword(self, params):
         """
-        вставка данных
+        Получить список вакансий по ключевому слову
         """
-        pass
+        connection = self.connection(params, database_name="hh")
+        with connection.cursor() as cur:
+            keyword = input("Введите ключевое слово для поиска вакансий:\n").strip().lower()
+            cur.execute("""
+            SELECT employer_name, vacancy_name, salary_from, salary_to, url
+            FROM vacancy
+            WHERE LOWER(employer_name) LIKE %s
+            OR LOWER(vacancy_name) LIKE %s
+            OR LOWER(region) LIKE %s
+            OR LOWER(city) LIKE %s
+            OR LOWER(street) LIKE %s
+            OR LOWER(building) LIKE %s
+            OR LOWER(employer_url) LIKE %s
+            OR LOWER(requirement) LIKE %s
+            --OR LOWER(responsibility) LIKE %s
+            OR LOWER(experience) LIKE %s
+            OR LOWER(employment) LIKE %s
+        """, (
+                f"%{keyword}%",) * 10)
+
+            results = cur.fetchall()
+            for i in results:
+                if i[2] and i[3]:
+                    salary = f" {i[2]}-{i[3]}"
+                elif i[2]:
+                    salary = f"от {i[2]}"
+                elif i[3]:
+                    salary = f"до {i[3]}"
+                else:
+                    salary = "Не указана"
+                print(f"{i[0]} - {i[1]} - зарплата: {salary} - {i[4]}")
+
+        self.connection_close(connection)
+        self.prog.printhelper.to_return()

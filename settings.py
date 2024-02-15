@@ -1,7 +1,7 @@
-# import os
+# ------------------------------------ Базовые настройки и утилиты программы -------------------------------------------
+
 from configparser import ConfigParser
 
-# PASSWORD = os.getenv("My_PostgreSQL_password")
 companies_list = [
     {
         "Магнит": 49357
@@ -44,6 +44,11 @@ def config(filename="database.ini", section="postgresql"):
 
 
 def get_employer_id():
+    """
+    Возвращает список id компаний
+    (для корректной работы программы)
+    """
+
     id_list = []
     for i in companies_list:
         for key, value in i.items():
@@ -52,6 +57,11 @@ def get_employer_id():
 
 
 def get_employer_str():
+    """
+    Помощник в выводе информации в терминал
+    (выводит названия компаний, вакансии из которых будут запрашиваться)
+    """
+
     for i in companies_list:
         for key, value in i.items():
             print(key)
