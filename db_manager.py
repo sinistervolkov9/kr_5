@@ -20,8 +20,7 @@ class DBUtils:
         Создание таблиц
         """
 
-        connection = self.connection(params,
-                                     database_name="hh")  # вызываем метод соединения с указанием имени базы данных
+        connection = self.connection(params, database_name="hh")
         with connection.cursor() as cur:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS vacancy (
@@ -53,9 +52,9 @@ class DBUtils:
         Подключение программы к базе данных
         """
 
-        connect = psycopg2.connect(dbname=database_name, **params)  # создаем соединение с базой данных
-        connect.autocommit = True  # включаем режим автоматической фиксации
-        return connect  # возвращаем соединение
+        connect = psycopg2.connect(dbname=database_name, **params)
+        connect.autocommit = True
+        return connect
 
     def connection_close(self, connection):
         """
@@ -241,7 +240,7 @@ class DBManager(DBUtils):
             OR LOWER(experience) LIKE %s
             OR LOWER(employment) LIKE %s
         """, (
-                f"%{keyword}%",) * 10)
+                f"%{keyword}%",) * 11)
 
             results = cur.fetchall()
             for i in results:
