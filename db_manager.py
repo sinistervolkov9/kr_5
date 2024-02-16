@@ -22,7 +22,7 @@ class DBUtils:
 
         connection = self.connection(params, database_name="hh")
         with connection.cursor() as cur:
-            cur.execute("""
+            cur.execute(f"""
                 CREATE TABLE IF NOT EXISTS vacancy (
                     vacancy_id INTEGER,
                     vacancy_name VARCHAR(255),
@@ -64,7 +64,41 @@ class DBUtils:
         connection.commit()
         connection.close()
 
-    def record(self, data, params):
+    def converter(self, i):
+        id = i["id"] if i["id"] is not None else 0
+        name = i["name"] if i["name"] is not None else ""
+        area_id = i["area"]["id"] if i["area"]["id"] is not None else 0
+        area_name = i["area"]["name"] if i["area"]["name"] is not None else ""
+        salary = i["salary"] if i["salary"] is not None else {"from": None, "to": None}
+        salary_from = salary["from"] if salary["from"] is not None else 0
+        salary_to = salary["to"] if salary["to"] is not None else 0
+        address = i["address"] if i["address"] is not None else {"city": None, "street": None, "building": None}
+        city = address["city"] if address["city"] is not None else ""
+        street = address["street"] if address["street"] is not None else ""
+        building = address["building"] if address["building"] is not None else ""
+        published_at = i["published_at"] if i["published_at"] is not None else ""
+        url = i["alternate_url"] if i["alternate_url"] is not None else ""
+        employer = i["employer"] if i["employer"] is not None else {"id": None, "name": None,
+                                                                    "alternate_url": None}
+        employer_id = employer["id"] if employer["id"] is not None else ""
+        employer_name = employer["name"] if employer["name"] is not None else ""
+        employer_url = employer["alternate_url"] if employer["alternate_url"] is not None else ""
+        snippet = i["snippet"] if i["snippet"] is not None else {"requirement": None, "responsibility": None}
+        requirement = snippet["requirement"] if snippet["requirement"] is not None else ""
+        responsibility = snippet["responsibility"] if snippet["responsibility"] is not None else ""
+        experience = i["experience"] if i["experience"] is not None else {"experience_name": None}
+        experience_name = experience["name"] if experience["name"] is not None else ""
+        employment = i["employment"] if i["employment"] is not None else {"employment_name": None}
+        employment_name = employment["name"] if employment["name"] is not None else ""
+
+        converted_data = [id, name, area_id, area_name, salary_from, salary_to, city, street, building, published_at,
+                          url, employer_id,
+                          employer_name, employer_url, requirement, responsibility, experience_name,
+                          employment_name]
+
+        return converted_data
+
+    def record(self, converted_data, params):
         """
         add_data_to_tabs
         Заполнение таблицы данными
@@ -72,39 +106,8 @@ class DBUtils:
 
         connection = self.connection(params, database_name="hh")
         with connection.cursor() as cur:
-            for i in data:
-                id = i["id"] if i["id"] is not None else 0
-                name = i["name"] if i["name"] is not None else ""
-                area_id = i["area"]["id"] if i["area"]["id"] is not None else 0
-                area_name = i["area"]["name"] if i["area"]["name"] is not None else ""
-                salary = i["salary"] if i["salary"] is not None else {"from": None, "to": None}
-                salary_from = salary["from"] if salary["from"] is not None else 0
-                salary_to = salary["to"] if salary["to"] is not None else 0
-                address = i["address"] if i["address"] is not None else {"city": None, "street": None, "building": None}
-                city = address["city"] if address["city"] is not None else ""
-                street = address["street"] if address["street"] is not None else ""
-                building = address["building"] if address["building"] is not None else ""
-                published_at = i["published_at"] if i["published_at"] is not None else ""
-                url = i["alternate_url"] if i["alternate_url"] is not None else ""
-                employer = i["employer"] if i["employer"] is not None else {"id": None, "name": None,
-                                                                            "alternate_url": None}
-                employer_id = employer["id"] if employer["id"] is not None else ""
-                employer_name = employer["name"] if employer["name"] is not None else ""
-                employer_url = employer["alternate_url"] if employer["alternate_url"] is not None else ""
-                snippet = i["snippet"] if i["snippet"] is not None else {"requirement": None, "responsibility": None}
-                requirement = snippet["requirement"] if snippet["requirement"] is not None else ""
-                responsibility = snippet["responsibility"] if snippet["responsibility"] is not None else ""
-                experience = i["experience"] if i["experience"] is not None else {"experience_name": None}
-                experience_name = experience["name"] if experience["name"] is not None else ""
-                employment = i["employment"] if i["employment"] is not None else {"employment_name": None}
-                employment_name = employment["name"] if employment["name"] is not None else ""
-
-                cur.execute("""
-insert into vacancy values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                            [id, name, area_id, area_name, salary_from, salary_to, city, street, building, published_at,
-                             url, employer_id,
-                             employer_name, employer_url, requirement, responsibility, experience_name,
-                             employment_name])
+            cur.execute(f"""
+insert into vacancy values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", converted_data)
 
         self.connection_close(connection)
 

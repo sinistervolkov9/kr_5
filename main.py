@@ -29,7 +29,9 @@ class Main:
         for i in range(len(self.companies_list)):
             print(f"{i + 1}/{len(self.companies_list)}")
             data = self.request_hh.get_request(get_employer_id()[i], search_area)
-            self.db_utils.record(data, self.params)
+            for i in data:
+                conv_data = self.db_utils.converter(i)
+                self.db_utils.record(conv_data, self.params)
         self.interaction.print_database_is_formed()
         while self.running:
             user_input = self.interaction.actions()
