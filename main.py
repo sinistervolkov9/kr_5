@@ -26,12 +26,13 @@ class Main:
         self.db_utils.create_db("hh", self.params)
         self.db_utils.create_tabs(self.params)
         search_area = self.interaction.interactive_start()
+        print("Загрузка...")
         for i in range(len(self.companies_list)):
             print(f"{i + 1}/{len(self.companies_list)}")
             data = self.request_hh.get_request(get_employer_id()[i], search_area)
             for i in data:
                 conv_data = self.db_utils.converter(i)
-                self.db_utils.record(conv_data, self.params)
+                self.db_utils.record(conv_data[0], conv_data[1], self.params)
         self.interaction.print_database_is_formed()
         while self.running:
             user_input = self.interaction.actions()

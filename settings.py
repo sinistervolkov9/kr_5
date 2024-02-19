@@ -4,7 +4,7 @@ from configparser import ConfigParser
 
 companies_list = [
     {
-        "Магнит": 49357
+    "Магнит": 49357
     },
     {"Тинькофф": 78638
      },
